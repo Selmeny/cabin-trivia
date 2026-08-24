@@ -44,39 +44,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onChoice(choiceIndex: Int) {
-        if (session.isComplete) return
         session.answer(choiceIndex)
         render()
     }
 
     private fun render() {
-        if (session.isComplete) {
-            topicText.visibility = View.GONE
-            promptText.text = getString(R.string.quiz_complete)
-            scoreText.visibility = View.VISIBLE
-            scoreText.text = getString(R.string.score_format, session.correct, session.asked)
-            playAgainButton.visibility = View.VISIBLE
-            choiceButtons.forEach { it.visibility = View.GONE }
-            return
-        }
-
-        val question = session.current ?: return
-        topicText.visibility = View.VISIBLE
-        topicText.text = topicLabel(question.topic)
-        promptText.text = question.prompt
-        scoreText.visibility = View.GONE
-        playAgainButton.visibility = View.GONE
-        choiceButtons.forEachIndexed { index, button ->
-            button.visibility = View.VISIBLE
-            button.text = question.choices.getOrElse(index) { "" }
+        when (val view = session.view) {
+            is QuizView.Finished -> {
+                topicText.visibility = View.GONE
+                promptText.text = getString(R.string.quiz_complete)
+                scoreText.visibility = View.VISIBLE
+                scoreText.text = getString(R.string.score_format, view.correct, view.asked)
+                playAgainButton.visibility = View.VISIBLE
+                choiceButtons.forEach { it.visibility = View.GONE }
+            }
+            is QuizView.Asking -> {
+                val question = view.question
+                topicText.visibility = View.VISIBLE
+                topicText.text = topicLabel(question.topic)
+                promptText.text = question.prompt
+                scoreText.visibility = View.GONE
+                playAgainButton.visibility = View.GONE
+                choiceButtons.forEachIndexed { index, button ->
+                    button.visibility = View.VISIBLE
+                    button.text = question.choices[index]
+                }
+            }
         }
     }
 
-    private fun topicLabel(topic: String): String = when (topic) {
-        AviationCatalog.TOPIC_AIRPORT_CODES -> getString(R.string.topic_airport_codes)
-        AviationCatalog.TOPIC_AIRLINES -> getString(R.string.topic_airlines)
-        AviationCatalog.TOPIC_FAMOUS_FLIGHTS -> getString(R.string.topic_famous_flights)
-        AviationCatalog.TOPIC_METEOROLOGY -> getString(R.string.topic_meteorology)
-        else -> topic
+    private fun topicLabel(topic: Topic): String = when (topic) {
+        Topic.AIRPORT_CODES -> getString(R.string.topic_airport_codes)
+        Topic.AIRLINES -> getString(R.string.topic_airlines)
+        Topic.FAMOUS_FLIGHTS -> getString(R.string.topic_famous_flights)
+        Topic.METEOROLOGY -> getString(R.string.topic_meteorology)
     }
 }

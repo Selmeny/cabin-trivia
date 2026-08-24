@@ -12,18 +12,15 @@ class AviationCatalogTest {
 
         assertTrue("catalog must contain more than one question", catalog.size > 1)
         val topics = catalog.map { it.topic }.toSet()
-        val required = setOf(
-            AviationCatalog.TOPIC_AIRPORT_CODES,
-            AviationCatalog.TOPIC_AIRLINES,
-            AviationCatalog.TOPIC_FAMOUS_FLIGHTS,
-            AviationCatalog.TOPIC_METEOROLOGY
-        )
         assertTrue(
             "catalog must span more than one aviation topic, found $topics",
-            topics.intersect(required).size >= 2
+            topics.size >= 2
         )
         catalog.forEach { question ->
+            assertTrue(question.prompt.isNotBlank())
+            assertTrue(question.explanation.isNotBlank())
             assertEquals(4, question.choices.size)
+            assertTrue(question.choices.all { it.isNotBlank() })
             assertTrue(question.correctIndex in question.choices.indices)
         }
     }
