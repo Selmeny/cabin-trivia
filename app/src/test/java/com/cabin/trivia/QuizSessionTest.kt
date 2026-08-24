@@ -169,4 +169,43 @@ class QuizSessionTest {
         assertEquals(idsA, idsB)
         assertEquals(fixture.size, idsA.size)
     }
+
+    @Test
+    fun snapshotRevealing_roundTripsView() {
+        val session = QuizSession(fixture, random = kotlin.random.Random(1))
+        val asking = session.view as QuizView.Asking
+        session.answer(asking.question.correctIndex)
+        val before = session.view
+        val restored = QuizSession.restore(session.snapshot(), fixture, kotlin.random.Random(0))
+        assertEquals(before, restored.view)
+    }
+
+    @Test
+    fun snapshotFinished_roundTripsView() {
+        val session = QuizSession(fixture, random = kotlin.random.Random(1))
+        repeat(fixture.size) {
+            val asking = session.view as QuizView.Asking
+            session.answer(asking.question.correctIndex)
+            session.continueAfterReveal()
+        }
+        val before = session.view as QuizView.Finished
+        val restored = QuizSession.restore(session.snapshot(), fixture, kotlin.random.Random(0))
+        assertEquals(before, restored.view)
+    }
+
+    @Test
+    fun restoreMissingId_startsFreshShuffle() {
+        val snapshot = SessionSnapshot(
+            ids = listOf("missing", "q1"),
+            asked = 0,
+            correct = 0,
+            phase = Phase.Asking,
+            pickedIndex = null
+        )
+        val restored = QuizSession.restore(snapshot, fixture, kotlin.random.Random(7))
+        val view = restored.view
+        assertTrue(view is QuizView.Asking)
+        val id = (view as QuizView.Asking).question.id
+        assertTrue(id == "q1" || id == "q2")
+    }
 }
