@@ -146,4 +146,27 @@ class QuizSessionTest {
         assertEquals(QuizView.Finished(correct = 0, asked = 0), session.view)
         assertFalse(session.answer(0))
     }
+
+    @Test
+    fun sameSeed_sameIdSequence() {
+        val seed = 42L
+        val a = QuizSession(fixture, random = kotlin.random.Random(seed))
+        val b = QuizSession(fixture, random = kotlin.random.Random(seed))
+        val idsA = mutableListOf<String>()
+        while (a.view is QuizView.Asking) {
+            val asking = a.view as QuizView.Asking
+            idsA += asking.question.id
+            a.answer(0)
+            a.continueAfterReveal()
+        }
+        val idsB = mutableListOf<String>()
+        while (b.view is QuizView.Asking) {
+            val asking = b.view as QuizView.Asking
+            idsB += asking.question.id
+            b.answer(0)
+            b.continueAfterReveal()
+        }
+        assertEquals(idsA, idsB)
+        assertEquals(fixture.size, idsA.size)
+    }
 }
