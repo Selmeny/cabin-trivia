@@ -16,6 +16,16 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/progressText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textAppearance="?attr/textAppearanceCaption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topicText" />
+
+    <TextView
         android:id="@+id/promptText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -23,7 +33,7 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topicText" />
+        app:layout_constraintTop_toBottomOf="@id/progressText" />
 
     <TextView
         android:id="@+id/scoreText"
@@ -72,6 +82,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/choice2" />
 
+    <TextView
+        android:id="@+id/explanationText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/choice3" />
+
+    <Button
+        android:id="@+id/continueButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/continue_button"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/explanationText" />
+
     <Button
         android:id="@+id/playAgainButton"
         android:layout_width="wrap_content"
@@ -80,6 +110,6 @@
         android:text="@string/play_again"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/choice3" />
+        app:layout_constraintTop_toBottomOf="@id/continueButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
