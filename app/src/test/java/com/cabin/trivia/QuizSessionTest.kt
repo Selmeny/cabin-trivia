@@ -199,7 +199,6 @@ class QuizSessionTest {
             ids = listOf("missing", "q1"),
             asked = 0,
             correct = 0,
-            phase = Phase.Asking,
             pickedIndex = null
         )
         val restored = QuizSession.restore(snapshot, fixture, kotlin.random.Random(7))

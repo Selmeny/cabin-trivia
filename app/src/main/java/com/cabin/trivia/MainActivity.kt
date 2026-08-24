@@ -86,18 +86,43 @@ class MainActivity : AppCompatActivity() {
                     button.backgroundTintList = null
                 }
             }
-            is QuizView.Asking -> bindQuestion(view.question, view.asked, view.total, pickedIndex = null)
-            is QuizView.Revealing -> bindQuestion(view.question, view.asked, view.total, pickedIndex = view.pickedIndex)
+            is QuizView.Asking -> bindAsking(view)
+            is QuizView.Revealing -> bindRevealing(view)
         }
     }
 
-    private fun bindQuestion(
-        question: Question,
-        asked: Int,
-        total: Int,
-        pickedIndex: Int?
-    ) {
-        val revealing = pickedIndex != null
+    private fun bindAsking(view: QuizView.Asking) {
+        bindQuestionChrome(view.question, view.asked, view.total)
+        explanationText.visibility = View.GONE
+        continueButton.visibility = View.GONE
+        choiceButtons.forEachIndexed { index, button ->
+            button.visibility = View.VISIBLE
+            button.text = view.question.choices[index]
+            button.isEnabled = true
+            button.backgroundTintList = null
+        }
+    }
+
+    private fun bindRevealing(view: QuizView.Revealing) {
+        bindQuestionChrome(view.question, view.asked, view.total)
+        explanationText.visibility = View.VISIBLE
+        explanationText.text = view.question.explanation
+        continueButton.visibility = View.VISIBLE
+        val correctTint = ContextCompat.getColorStateList(this, R.color.answer_correct)
+        val wrongTint = ContextCompat.getColorStateList(this, R.color.answer_wrong)
+        choiceButtons.forEachIndexed { index, button ->
+            button.visibility = View.VISIBLE
+            button.text = view.question.choices[index]
+            button.isEnabled = false
+            button.backgroundTintList = when {
+                index == view.question.correctIndex -> correctTint
+                index == view.pickedIndex -> wrongTint
+                else -> null
+            }
+        }
+    }
+
+    private fun bindQuestionChrome(question: Question, asked: Int, total: Int) {
         topicText.visibility = View.VISIBLE
         topicText.text = topicLabel(question.topic)
         progressText.visibility = View.VISIBLE
@@ -105,27 +130,6 @@ class MainActivity : AppCompatActivity() {
         promptText.text = question.prompt
         scoreText.visibility = View.GONE
         playAgainButton.visibility = View.GONE
-        if (revealing) {
-            explanationText.visibility = View.VISIBLE
-            explanationText.text = question.explanation
-            continueButton.visibility = View.VISIBLE
-        } else {
-            explanationText.visibility = View.GONE
-            continueButton.visibility = View.GONE
-        }
-        val correctTint = ContextCompat.getColorStateList(this, R.color.answer_correct)
-        val wrongTint = ContextCompat.getColorStateList(this, R.color.answer_wrong)
-        choiceButtons.forEachIndexed { index, button ->
-            button.visibility = View.VISIBLE
-            button.text = question.choices[index]
-            button.isEnabled = !revealing
-            button.backgroundTintList = when {
-                pickedIndex == null -> null
-                index == question.correctIndex -> correctTint
-                index == pickedIndex -> wrongTint
-                else -> null
-            }
-        }
     }
 
     private fun topicLabel(topic: Topic): String = when (topic) {
@@ -139,7 +143,6 @@ class MainActivity : AppCompatActivity() {
         bundle.putStringArrayList(KEY_IDS, ArrayList(snapshot.ids))
         bundle.putInt(KEY_ASKED, snapshot.asked)
         bundle.putInt(KEY_CORRECT, snapshot.correct)
-        bundle.putString(KEY_PHASE, snapshot.phase.name)
         if (snapshot.pickedIndex != null) {
             bundle.putInt(KEY_PICKED, snapshot.pickedIndex)
             bundle.putBoolean(KEY_HAS_PICKED, true)
@@ -150,8 +153,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun snapshotFrom(bundle: Bundle): SessionSnapshot? {
         val ids = bundle.getStringArrayList(KEY_IDS) ?: return null
-        val phaseName = bundle.getString(KEY_PHASE) ?: return null
-        val phase = runCatching { Phase.valueOf(phaseName) }.getOrNull() ?: return null
         val picked = if (bundle.getBoolean(KEY_HAS_PICKED, false)) {
             bundle.getInt(KEY_PICKED)
         } else {
@@ -161,7 +162,6 @@ class MainActivity : AppCompatActivity() {
             ids = ids,
             asked = bundle.getInt(KEY_ASKED),
             correct = bundle.getInt(KEY_CORRECT),
-            phase = phase,
             pickedIndex = picked
         )
     }
@@ -170,7 +170,6 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_IDS = "session_ids"
         private const val KEY_ASKED = "session_asked"
         private const val KEY_CORRECT = "session_correct"
-        private const val KEY_PHASE = "session_phase"
         private const val KEY_PICKED = "session_picked"
         private const val KEY_HAS_PICKED = "session_has_picked"
     }
