@@ -1,5 +1,6 @@
 package com.cabin.trivia
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -18,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var continueButton: Button
     private lateinit var playAgainButton: Button
     private lateinit var choiceButtons: List<Button>
+    private lateinit var defaultChoiceTint: ColorStateList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.choice2),
             findViewById(R.id.choice3)
         )
+        defaultChoiceTint = requireNotNull(choiceButtons.first().backgroundTintList)
 
         choiceButtons.forEachIndexed { index, button ->
             button.setOnClickListener { onChoice(index) }
@@ -83,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                 choiceButtons.forEach { button ->
                     button.visibility = View.GONE
                     button.isEnabled = false
-                    button.backgroundTintList = null
+                    button.backgroundTintList = defaultChoiceTint
                 }
             }
             is QuizView.Asking -> bindAsking(view)
@@ -99,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             button.visibility = View.VISIBLE
             button.text = view.question.choices[index]
             button.isEnabled = true
-            button.backgroundTintList = null
+            button.backgroundTintList = defaultChoiceTint
         }
     }
 
@@ -117,7 +120,7 @@ class MainActivity : AppCompatActivity() {
             button.backgroundTintList = when {
                 index == view.question.correctIndex -> correctTint
                 index == view.pickedIndex -> wrongTint
-                else -> null
+                else -> defaultChoiceTint
             }
         }
     }
