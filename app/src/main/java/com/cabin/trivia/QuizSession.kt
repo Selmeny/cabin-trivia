@@ -1,27 +1,77 @@
 package com.cabin.trivia
 
+import kotlin.random.Random
+
 sealed class QuizView {
-    data class Asking(val question: Question, val asked: Int) : QuizView()
-    data class Finished(val correct: Int, val asked: Int) : QuizView()
+    data class Asking(
+        val question: Question,
+        val asked: Int,
+        val total: Int
+    ) : QuizView()
+
+    data class Revealing(
+        val question: Question,
+        val pickedIndex: Int,
+        val asked: Int,
+        val total: Int
+    ) : QuizView()
+
+    data class Finished(
+        val correct: Int,
+        val asked: Int
+    ) : QuizView()
 }
 
-class QuizSession(questions: List<Question>) {
-    private val items = questions.toList()
-    private var asked: Int = 0
-    private var correct: Int = 0
+class QuizSession private constructor(
+    private val items: List<Question>,
+    private var asked: Int,
+    private var correct: Int,
+    private var pickedIndex: Int?
+) {
+    constructor(
+        questions: List<Question>,
+        random: Random = Random.Default
+    ) : this(
+        items = questions.toList().shuffled(random),
+        asked = 0,
+        correct = 0,
+        pickedIndex = null
+    )
 
     val view: QuizView
-        get() = if (asked >= items.size) {
-            QuizView.Finished(correct = correct, asked = asked)
-        } else {
-            QuizView.Asking(question = items[asked], asked = asked)
+        get() {
+            val pick = pickedIndex
+            return when {
+                asked >= items.size -> QuizView.Finished(correct = correct, asked = asked)
+                pick != null -> QuizView.Revealing(
+                    question = items[asked],
+                    pickedIndex = pick,
+                    asked = asked,
+                    total = items.size
+                )
+                else -> QuizView.Asking(
+                    question = items[asked],
+                    asked = asked,
+                    total = items.size
+                )
+            }
         }
 
     fun answer(choiceIndex: Int): Boolean {
+        if (pickedIndex != null) return false
         val question = items.getOrNull(asked) ?: return false
-        val isCorrect = choiceIndex == question.correctIndex
+        if (choiceIndex !in question.choices.indices) return false
+        pickedIndex = choiceIndex
+        return choiceIndex == question.correctIndex
+    }
+
+    fun continueAfterReveal() {
+        val pick = pickedIndex ?: return
+        val question = items.getOrNull(asked) ?: return
         asked += 1
-        if (isCorrect) correct += 1
-        return isCorrect
+        if (pick == question.correctIndex) {
+            correct += 1
+        }
+        pickedIndex = null
     }
 }

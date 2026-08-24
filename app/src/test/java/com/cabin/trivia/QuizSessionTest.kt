@@ -27,61 +27,123 @@ class QuizSessionTest {
     )
 
     @Test
-    fun correctAnswer_incrementsScore() {
+    fun correctAnswer_entersRevealingWithoutIncrementingAsked() {
         val session = QuizSession(fixture)
-        val question = (session.view as QuizView.Asking).question
+        val asking = session.view as QuizView.Asking
+        assertEquals(0, asking.asked)
+        assertEquals(2, asking.total)
 
-        val result = session.answer(question.correctIndex)
+        val result = session.answer(asking.question.correctIndex)
 
         assertTrue(result)
-        val remaining = session.view as QuizView.Asking
-        assertEquals(fixture[1], remaining.question)
-        assertEquals(1, remaining.asked)
-
-        session.answer((remaining.question.correctIndex + 1) % remaining.question.choices.size)
-        val finished = session.view as QuizView.Finished
-        assertEquals(1, finished.correct)
-        assertEquals(fixture.size, finished.asked)
+        val revealing = session.view as QuizView.Revealing
+        assertEquals(asking.question, revealing.question)
+        assertEquals(asking.question.correctIndex, revealing.pickedIndex)
+        assertEquals(0, revealing.asked)
+        assertEquals(2, revealing.total)
     }
 
     @Test
-    fun incorrectAnswer_doesNotIncrementScore() {
+    fun continueAfterCorrect_incrementsScore() {
         val session = QuizSession(fixture)
-        val question = (session.view as QuizView.Asking).question
-        val wrong = (question.correctIndex + 1) % question.choices.size
+        val first = session.view as QuizView.Asking
+        session.answer(first.question.correctIndex)
+        session.continueAfterReveal()
 
-        val result = session.answer(wrong)
+        when (val view = session.view) {
+            is QuizView.Asking -> {
+                assertEquals(1, view.asked)
+                val wrong = (view.question.correctIndex + 1) % view.question.choices.size
+                session.answer(wrong)
+                session.continueAfterReveal()
+            }
+            is QuizView.Finished -> {
+                assertEquals(1, view.correct)
+                assertEquals(1, view.asked)
+                return
+            }
+            is QuizView.Revealing -> error("should have continued")
+        }
 
-        assertFalse(result)
-        val remaining = session.view as QuizView.Asking
-        assertEquals(fixture[1], remaining.question)
-        assertEquals(1, remaining.asked)
+        val finished = session.view as QuizView.Finished
+        assertEquals(1, finished.correct)
+        assertEquals(2, finished.asked)
+    }
 
-        session.answer((remaining.question.correctIndex + 1) % remaining.question.choices.size)
+    @Test
+    fun incorrectAnswer_thenContinue_doesNotIncrementScore() {
+        val session = QuizSession(fixture)
+        val first = session.view as QuizView.Asking
+        val wrong = (first.question.correctIndex + 1) % first.question.choices.size
+
+        assertFalse(session.answer(wrong))
+        val revealing = session.view as QuizView.Revealing
+        assertEquals(first.question, revealing.question)
+        assertEquals(wrong, revealing.pickedIndex)
+
+        session.continueAfterReveal()
+
+        while (session.view is QuizView.Asking) {
+            val asking = session.view as QuizView.Asking
+            val miss = (asking.question.correctIndex + 1) % asking.question.choices.size
+            session.answer(miss)
+            session.continueAfterReveal()
+        }
+
         val finished = session.view as QuizView.Finished
         assertEquals(0, finished.correct)
         assertEquals(fixture.size, finished.asked)
     }
 
     @Test
-    fun multiQuestionSession_reportsCorrectCountAndQuestionsAsked() {
+    fun answerDuringRevealing_isNoOp() {
         val session = QuizSession(fixture)
+        val first = session.view as QuizView.Asking
+        session.answer(first.question.correctIndex)
+        val before = session.view as QuizView.Revealing
 
+        assertFalse(session.answer(0))
+        assertEquals(before, session.view)
+    }
+
+    @Test
+    fun outOfRangeAnswer_isNoOp() {
+        val session = QuizSession(fixture)
+        val before = session.view
+        assertFalse(session.answer(-1))
+        assertFalse(session.answer(4))
+        assertEquals(before, session.view)
+    }
+
+    @Test
+    fun fullRun_reportsScore() {
+        val session = QuizSession(fixture)
         var expectedCorrect = 0
-        fixture.forEachIndexed { index, question ->
+        repeat(fixture.size) { index ->
             val asking = session.view as QuizView.Asking
-            assertEquals(question, asking.question)
             assertEquals(index, asking.asked)
             val chooseCorrect = index % 2 == 0
-            val choice = if (chooseCorrect) question.correctIndex else (question.correctIndex + 1) % question.choices.size
+            val choice = if (chooseCorrect) {
+                asking.question.correctIndex
+            } else {
+                (asking.question.correctIndex + 1) % asking.question.choices.size
+            }
             if (chooseCorrect) expectedCorrect += 1
             session.answer(choice)
+            session.continueAfterReveal()
         }
-
         val finished = session.view as QuizView.Finished
         assertEquals(fixture.size, finished.asked)
         assertEquals(expectedCorrect, finished.correct)
         assertFalse(session.answer(0))
+        session.continueAfterReveal()
         assertTrue(session.view is QuizView.Finished)
+    }
+
+    @Test
+    fun emptyCatalog_isFinished() {
+        val session = QuizSession(emptyList())
+        assertEquals(QuizView.Finished(correct = 0, asked = 0), session.view)
+        assertFalse(session.answer(0))
     }
 }

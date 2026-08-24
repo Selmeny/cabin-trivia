@@ -70,6 +70,18 @@ class MainActivity : AppCompatActivity() {
                     button.text = question.choices[index]
                 }
             }
+            is QuizView.Revealing -> {
+                val question = view.question
+                topicText.visibility = View.VISIBLE
+                topicText.text = topicLabel(question.topic)
+                promptText.text = question.prompt
+                scoreText.visibility = View.GONE
+                playAgainButton.visibility = View.GONE
+                choiceButtons.forEachIndexed { index, button ->
+                    button.visibility = View.VISIBLE
+                    button.text = question.choices[index]
+                }
+            }
         }
     }
 
