@@ -4,11 +4,14 @@ Free, fully offline aviation trivia for a 1–2 hour flight. Questions ship in t
 
 ## What it does
 
-- Loads a bundled catalog of 80–100 questions (airport codes, airlines, famous flights, meteorology)
-- Shuffles the full catalog each Play / Play again
-- Tap a choice to reveal: the miss and the correct answer are marked, plus a short explanation; then Continue
-- Score is shown as You got X of Y
-- Rotation restores the same deal (no network)
+- Start screen: **Short pack** (20 questions) or **Full catalog** (~90 questions)
+- Bundled aviation items: airport codes, airlines, famous flights, meteorology
+- Each deal shuffles question order and the four choices (the correct fact still scores)
+- Tap a choice to reveal: miss and correct are marked, plus a short explanation; then Continue
+- Score is You got X of Y; Play again returns to the start screen
+- Dark cabin UI, large tap targets, portrait or landscape
+- Rotation restores the same deal; a bad snapshot returns to the start screen
+- No account, no network (`INTERNET` is not declared)
 
 ## Toolchain
 
