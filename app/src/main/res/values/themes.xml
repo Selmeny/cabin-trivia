@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.CabinTrivia" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.CabinTrivia" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="isLightTheme">false</item>
         <item name="colorPrimary">@color/navy_500</item>
         <item name="colorPrimaryVariant">@color/navy_700</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/sky_200</item>
         <item name="colorOnSecondary">@color/black</item>
+        <item name="android:windowBackground">@color/cabin_bg</item>
+        <item name="colorSurface">@color/cabin_surface</item>
+        <item name="android:statusBarColor">@color/cabin_bg</item>
+        <item name="android:navigationBarColor">@color/cabin_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:textColorPrimary">@color/cabin_text</item>
+        <item name="android:textColorSecondary">@color/cabin_muted</item>
+        <item name="colorOnSurface">@color/cabin_text</item>
     </style>
 </resources>

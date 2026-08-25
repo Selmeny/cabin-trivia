@@ -8,4 +8,8 @@
     <color name="ic_launcher_background">#FF1B365D</color>
     <color name="answer_correct">#FF2E7D32</color>
     <color name="answer_wrong">#FFC62828</color>
+    <color name="cabin_bg">#FF070B12</color>
+    <color name="cabin_surface">#FF121A28</color>
+    <color name="cabin_text">#FFE8EEF6</color>
+    <color name="cabin_muted">#FF9BB0C9</color>
 </resources>

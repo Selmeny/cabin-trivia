@@ -2,6 +2,8 @@ package com.cabin.trivia
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -176,8 +178,9 @@ class QuizSessionTest {
         val asking = session.view as QuizView.Asking
         session.answer(asking.question.correctIndex)
         val before = session.view
-        val restored = QuizSession.restore(session.snapshot(), fixture, kotlin.random.Random(0))
-        assertEquals(before, restored.view)
+        val restored = QuizSession.restore(session.snapshot(), fixture)
+        assertNotNull(restored)
+        assertEquals(before, restored!!.view)
     }
 
     @Test
@@ -189,22 +192,85 @@ class QuizSessionTest {
             session.continueAfterReveal()
         }
         val before = session.view as QuizView.Finished
-        val restored = QuizSession.restore(session.snapshot(), fixture, kotlin.random.Random(0))
-        assertEquals(before, restored.view)
+        val restored = QuizSession.restore(session.snapshot(), fixture)
+        assertNotNull(restored)
+        assertEquals(before, restored!!.view)
     }
 
     @Test
-    fun restoreMissingId_startsFreshShuffle() {
+    fun restoreMissingId_returnsNull() {
         val snapshot = SessionSnapshot(
-            ids = listOf("missing", "q1"),
+            questions = listOf(
+                DealtQuestion("missing", fixture[0].choices, 0),
+                DealtQuestion("q1", fixture[0].choices, 0)
+            ),
             asked = 0,
             correct = 0,
             pickedIndex = null
         )
-        val restored = QuizSession.restore(snapshot, fixture, kotlin.random.Random(7))
-        val view = restored.view
-        assertTrue(view is QuizView.Asking)
-        val id = (view as QuizView.Asking).question.id
-        assertTrue(id == "q1" || id == "q2")
+        assertNull(QuizSession.restore(snapshot, fixture))
+    }
+
+    @Test
+    fun deal_shufflesChoiceOrderAndStillScoresTheCorrectFact() {
+        val catalogRow = fixture[0]
+        var sawReorderedChoices = false
+        var correctAnswers = 0
+        var questionsSeen = 0
+        for (seed in 0L..80L) {
+            val session = QuizSession(fixture, random = kotlin.random.Random(seed))
+            while (session.view is QuizView.Asking) {
+                val asking = session.view as QuizView.Asking
+                val original = fixture.first { it.id == asking.question.id }
+                if (asking.question.choices != original.choices) {
+                    sawReorderedChoices = true
+                }
+                val fact = original.choices[original.correctIndex]
+                val index = asking.question.choices.indexOf(fact)
+                assertTrue(index >= 0)
+                assertTrue(session.answer(index))
+                session.continueAfterReveal()
+                questionsSeen += 1
+                if (asking.question.id == catalogRow.id) {
+                    correctAnswers += 1
+                }
+            }
+            val finished = session.view as QuizView.Finished
+            assertEquals(fixture.size, finished.asked)
+            assertEquals(fixture.size, finished.correct)
+        }
+        assertTrue(questionsSeen > 0)
+        assertTrue(correctAnswers > 0)
+        assertTrue(sawReorderedChoices)
+    }
+
+    @Test
+    fun shortPack_finishesWithFewerQuestionsThanFullCatalog() {
+        val catalog = AviationCatalog.load()
+        assertTrue(catalog.size > CabinPacks.SHORT_SIZE)
+        val shortSession = QuizSession(
+            CabinPacks.short(catalog, kotlin.random.Random(3)),
+            random = kotlin.random.Random(4)
+        )
+        while (shortSession.view is QuizView.Asking) {
+            val asking = shortSession.view as QuizView.Asking
+            shortSession.answer(asking.question.correctIndex)
+            shortSession.continueAfterReveal()
+        }
+        val shortFinished = shortSession.view as QuizView.Finished
+        assertEquals(CabinPacks.SHORT_SIZE, shortFinished.asked)
+
+        val fullSession = QuizSession(
+            catalog,
+            random = kotlin.random.Random(5)
+        )
+        while (fullSession.view is QuizView.Asking) {
+            val asking = fullSession.view as QuizView.Asking
+            fullSession.answer(asking.question.correctIndex)
+            fullSession.continueAfterReveal()
+        }
+        val fullFinished = fullSession.view as QuizView.Finished
+        assertEquals(catalog.size, fullFinished.asked)
+        assertTrue(shortFinished.asked < fullFinished.asked)
     }
 }

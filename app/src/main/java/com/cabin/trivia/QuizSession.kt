@@ -2,8 +2,14 @@ package com.cabin.trivia
 
 import kotlin.random.Random
 
+data class DealtQuestion(
+    val id: String,
+    val choices: List<String>,
+    val correctIndex: Int
+)
+
 data class SessionSnapshot(
-    val ids: List<String>,
+    val questions: List<DealtQuestion>,
     val asked: Int,
     val correct: Int,
     val pickedIndex: Int?
@@ -39,7 +45,7 @@ class QuizSession private constructor(
         questions: List<Question>,
         random: Random = Random.Default
     ) : this(
-        items = questions.toList().shuffled(random),
+        items = deal(questions, random),
         asked = 0,
         correct = 0,
         pickedIndex = null
@@ -84,7 +90,7 @@ class QuizSession private constructor(
 
     fun snapshot(): SessionSnapshot {
         return SessionSnapshot(
-            ids = items.map { it.id },
+            questions = items.map { DealtQuestion(it.id, it.choices, it.correctIndex) },
             asked = asked,
             correct = correct,
             pickedIndex = pickedIndex
@@ -92,16 +98,29 @@ class QuizSession private constructor(
     }
 
     companion object {
+        private fun deal(questions: List<Question>, random: Random): List<Question> {
+            return questions.toList().shuffled(random).map { question ->
+                val order = question.choices.indices.shuffled(random)
+                question.copy(
+                    choices = order.map { question.choices[it] },
+                    correctIndex = order.indexOf(question.correctIndex)
+                )
+            }
+        }
+
         fun restore(
             snapshot: SessionSnapshot,
-            catalog: List<Question>,
-            random: Random = Random.Default
-        ): QuizSession {
-            if (!isValid(snapshot, catalog)) {
-                return QuizSession(catalog, random)
-            }
+            catalog: List<Question>
+        ): QuizSession? {
+            if (!isValid(snapshot, catalog)) return null
             val byId = catalog.associateBy { it.id }
-            val items = snapshot.ids.map { id -> byId.getValue(id) }
+            val items = snapshot.questions.map { dealt ->
+                val base = byId.getValue(dealt.id)
+                base.copy(
+                    choices = dealt.choices,
+                    correctIndex = dealt.correctIndex
+                )
+            }
             return QuizSession(
                 items = items,
                 asked = snapshot.asked,
@@ -111,14 +130,22 @@ class QuizSession private constructor(
         }
 
         private fun isValid(snapshot: SessionSnapshot, catalog: List<Question>): Boolean {
-            val size = snapshot.ids.size
-            if (snapshot.ids.isEmpty()) {
+            val size = snapshot.questions.size
+            if (snapshot.questions.isEmpty()) {
                 return catalog.isEmpty()
             }
             val catalogIds = catalog.map { it.id }.toSet()
-            if (snapshot.ids.any { it !in catalogIds }) return false
+            if (snapshot.questions.any { it.id !in catalogIds }) return false
             if (snapshot.asked !in 0..size) return false
             if (snapshot.correct !in 0..snapshot.asked) return false
+            val byId = catalog.associateBy { it.id }
+            snapshot.questions.forEach { dealt ->
+                val original = byId.getValue(dealt.id)
+                if (dealt.choices.size != original.choices.size) return false
+                if (dealt.choices.toSet() != original.choices.toSet()) return false
+                if (dealt.correctIndex !in dealt.choices.indices) return false
+                if (dealt.choices[dealt.correctIndex] != original.choices[original.correctIndex]) return false
+            }
             val pick = snapshot.pickedIndex
             return when {
                 snapshot.asked >= size -> pick == null
