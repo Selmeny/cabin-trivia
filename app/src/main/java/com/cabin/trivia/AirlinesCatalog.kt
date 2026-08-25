@@ -95,7 +95,7 @@ internal val airlinesQuestions: List<Question> = listOf(
             prompt = "Southwest Airlines' IATA code is:",
             choices = listOf("SW", "WN", "NK", "F9"),
             correctIndex = 1,
-            explanation = "Southwest is WN (from the former AirTran/company history of 'WN'). NK is Spirit; F9 is Frontier."
+            explanation = "Southwest is WN. SW was already assigned, so Southwest uses WN. NK is Spirit; F9 is Frontier."
         ),
         Question(
             id = "fr",
