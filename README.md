@@ -4,9 +4,11 @@ Free, fully offline aviation trivia for a 1–2 hour flight. Questions ship in t
 
 ## What it does
 
-- Loads a bundled catalog (airport codes, airlines, famous flights, meteorology)
-- Shows a question and four choices
-- Tallies correct vs asked and shows the score at the end
+- Loads a bundled catalog of 80–100 questions (airport codes, airlines, famous flights, meteorology)
+- Shuffles the full catalog each Play / Play again
+- Tap a choice to reveal: the miss and the correct answer are marked, plus a short explanation; then Continue
+- Score is shown as You got X of Y
+- Rotation restores the same deal (no network)
 
 ## Toolchain
 
