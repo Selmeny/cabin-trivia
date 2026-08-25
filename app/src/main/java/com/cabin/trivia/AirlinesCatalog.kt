@@ -12,10 +12,10 @@ internal val airlinesQuestions: List<Question> = listOf(
     Question(
         id = "ana",
         topic = Topic.AIRLINES,
-        prompt = "ANA is the IATA code for which airline?",
+        prompt = "NH is the IATA code for which airline?",
         choices = listOf("Air New Zealand", "Austrian Airlines", "All Nippon Airways", "Air North"),
         correctIndex = 2,
-        explanation = "ANA stands for All Nippon Airways, Japan's largest airline by fleet."
+        explanation = "All Nippon Airways' IATA code is NH. ANA is the common name and ICAO code. JL is Japan Airlines."
     ),
     Question(
         id = "lufthansa",
