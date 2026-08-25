@@ -16,6 +16,7 @@ data class Question(
     val explanation: String
 ) {
     init {
+        require(id.isNotBlank()) { "id must be non-blank" }
         require(prompt.isNotBlank()) { "prompt must be non-blank" }
         require(explanation.isNotBlank()) { "explanation must be non-blank" }
         require(choices.size == 4) { "Question must have exactly four choices" }

@@ -65,6 +65,20 @@ class QuestionTest {
     }
 
     @Test
+    fun blankId_throws() {
+        assertThrows(IllegalArgumentException::class.java) {
+            Question(
+                id = "   ",
+                topic = Topic.AIRPORT_CODES,
+                prompt = "Prompt?",
+                choices = listOf("A", "B", "C", "D"),
+                correctIndex = 0,
+                explanation = "Because."
+            )
+        }
+    }
+
+    @Test
     fun validQuestion_constructs() {
         val q = Question(
             id = "ok",
